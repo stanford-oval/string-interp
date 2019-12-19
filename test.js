@@ -39,7 +39,14 @@ function testFuncReplacement() {
 }
 
 function testChunks() {
-    assert.deepStrictEqual(Array.from(interp.chunks('foo')), ['foo']);
+    assert.deepStrictEqual(Array.from(interp.parse('foo')), ['foo']);
+
+    assert.deepStrictEqual(Array.from(interp.parse('foo $v ${v2:lol}')), [
+        'foo ',
+        new interp.Placeholder('v', ''),
+        ' ',
+        new interp.Placeholder('v2', 'lol', 1)
+    ]);
 }
 
 function testFormatValueLocalized() {
