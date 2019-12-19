@@ -15,5 +15,8 @@
     "lint": "eslint ./index.js",
     "test": "nyc node ./test",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
+  },
+  "dependencies": {
+    "thingtalk-units": "^0.1.0"
   }
 }

@@ -8,6 +8,44 @@
 "use strict";
 
 const assert = require('assert');
-const interpolate = require('.');
+const interp = require('.');
 
-assert.deepStrictEqual(interpolate('foo'), 'foo');
+function testBasic() {
+    assert.strictEqual(interp('foo'), 'foo');
+    assert.strictEqual(interp(''), '');
+
+    assert.strictEqual(interp('$a $a$aa$a,a', { a: '1', aa: '2' }), '1 121,a');
+    assert.strictEqual(interp('${a} ${a}a ${aa}', { a: '1', aa: '2' }), '1 1a 2');
+    assert.strictEqual(interp('${a} ${a:url}', { a: '/' }), '/ %2F');
+    assert.strictEqual(interp('$a$$a', { a: '1' }), '1$a');
+}
+
+function testNested() {
+    assert.strictEqual(interp('${a.b} ${a.c} ${d}', {
+        a: {
+            b: '1',
+            c: '2',
+        },
+        d: '3'
+    }), '1 2 3');
+}
+
+function testFuncReplacement() {
+    let cnt = 0;
+    assert.strictEqual(interp('$a${a}${a:url}', (param) => {
+        assert.strictEqual(param, 'a');
+        return '/' + (cnt++);
+    }), '/0/1%2F2');
+}
+
+function testChunks() {
+    assert.deepStrictEqual(Array.from(interp.chunks('foo')), ['foo']);
+}
+
+function main() {
+    testBasic();
+    testNested();
+    testFuncReplacement();
+    testChunks();
+}
+main();
