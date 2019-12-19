@@ -11,4 +11,4 @@ po/*.json
 *.tsv
 *.py
 yarn-error.log
-
+lib/grammar.js

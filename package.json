@@ -1,22 +1,32 @@
 {
   "name": "string-interp",
   "version": "0.1.0",
-  "description": "Simple shell-style string interpolation",
-  "main": "index.js",
+  "description": "Shell-style string interpolation",
+  "main": "lib/index.js",
   "repository": "https://github.com/stanford-oval/string-interp",
   "author": "Giovanni Campagna <gcampagn@cs.stanford.edu>",
   "license": "BSD-3-Clause",
   "devDependencies": {
     "coveralls": "^3.0.0",
     "eslint": "^6.0.0",
-    "nyc": "^14.0.0"
+    "nyc": "^14.0.0",
+    "pegjs": "^0.10.0"
   },
   "scripts": {
-    "lint": "eslint ./index.js",
+    "lint": "eslint ./lib",
     "test": "nyc node ./test",
-    "coverage": "nyc report --reporter=text-lcov | coveralls"
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "prepare": "pegjs -o lib/grammar.js lib/grammar.pegjs"
   },
   "dependencies": {
     "thingtalk-units": "^0.1.0"
+  },
+  "nyc": {
+    "exclude": [
+      "lib/grammar.js",
+      "test/**",
+      "test.js",
+      "coverage/**"
+    ]
   }
 }
