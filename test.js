@@ -217,6 +217,24 @@ function testLocation() {
     assert.strictEqual(interp('${v.lat} ${v.lon}', { v: location }, options), '-37 113');
 }
 
+function testPrecision() {
+    const options = {
+        locale: 'en-US',
+        timezone: 'America/Los_Angeles',
+    };
+
+    // numbers
+    assert.strictEqual(interp('${v} ${v:.0} ${v:.1} ${v:.3}', { v: 0.123 }, options), '0.12 0 0.1 0.123');
+    assert.strictEqual(interp('${v} ${v:.0} ${v:.1} ${v:.3}', { v: 0.12 }, options), '0.12 0 0.1 0.12');
+
+    // percent
+    assert.strictEqual(interp('${v:%} ${v:%.0} ${v:%.1} ${v:%.3}', { v: 0.123456 }, options), '12 12 12.3 12.346');
+
+    // measure
+    assert.strictEqual(interp('${v:m} ${v:m.0} ${v:m.1} ${v:m.3}', { v: 0.123 }, options), '0.1 0 0.1 0.123');
+    assert.strictEqual(interp('${v:cm} ${v:cm.0} ${v:cm.1} ${v:cm.3}', { v: 0.123 }, options), '12.3 12 12.3 12.3');
+}
+
 function main() {
     testBasic();
     testNested();
@@ -225,6 +243,7 @@ function main() {
     testFormatValueLocalized();
     testFormatValueNonLocalized();
     testLocation();
+    testPrecision();
 
 }
 main();
