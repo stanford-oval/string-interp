@@ -405,6 +405,7 @@ function testOrdinal() {
     assert.strictEqual(interp(pattern, { a: 22 }, options), '22nd thing');
     assert.strictEqual(interp(pattern, { a: 23 }, options), '23rd thing');
     assert.strictEqual(interp(pattern, { a: 24 }, options), '24th thing');
+    assert.strictEqual(interp(pattern, { a: '____' }, options), '____th thing');
 }
 
 function main() {
