@@ -338,6 +338,12 @@ function testPlural() {
 
     assert.strictEqual(interp('${a:plural:one{one thing}other{}}', { a: 2 }), '');
     assert.strictEqual(interp('${a:plural:one{one thing}}', { a: 2 }), undefined);
+
+    assert.strictEqual(interp('${' + `a:plural:
+        one{one thing}
+        =-1{negative one things}
+        other{many things}
+    }`, { a: -1 }, options), 'negative one things');
 }
 
 function testSelect() {
