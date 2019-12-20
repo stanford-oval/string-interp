@@ -314,6 +314,72 @@ function testOptional() {
     }), '12');
 }
 
+function testPlural() {
+    const options = {
+        locale: 'en-US',
+        timezone: 'America/Los_Angeles',
+    };
+
+    assert.strictEqual(interp('${a:plural:one{one thing}other{many things}}', { a: 1 }), 'one thing');
+    assert.strictEqual(interp('${a:plural:one{one thing}other{many things}}', { a: 1 }, options),
+        'one thing');
+
+    assert.strictEqual(interp('${a:plural:=1{one thing}other{many things}}', { a: 1 }), 'one thing');
+    assert.strictEqual(interp('${a:plural:=1{one thing}other{many things}}', { a: 1 }, options),
+        'one thing');
+
+    assert.strictEqual(interp('${a:plural:one{one thing}other{many things}}', { a: 2 }), 'many things');
+    assert.strictEqual(interp('${a:plural:one{one thing}other{many things}}', { a: 2 }, options),
+        'many things');
+
+    assert.strictEqual(interp('${a:plural:one{one thing}=2{two things}other{many things}}', { a: 2 }), 'two things');
+    assert.strictEqual(interp('${a:plural:one{one thing}=2{two things}other{many things}}', { a: 2 }, options),
+        'two things');
+
+    assert.strictEqual(interp('${a:plural:one{one thing}other{}}', { a: 2 }), '');
+    assert.strictEqual(interp('${a:plural:one{one thing}}', { a: 2 }), undefined);
+}
+
+function testSelect() {
+    assert.strictEqual(interp('${' + `a:select:
+        sunny {It's nice and clear outside}
+        rainy {It's going to rain}
+    }`, { a: 'sunny' }), "It's nice and clear outside");
+
+    assert.strictEqual(interp('${' + `a:select:
+        sunny {It's nice and clear outside}
+        rainy {It's going to rain}
+    }`, { a: 'rainy' }), "It's going to rain");
+
+    assert.strictEqual(interp('${' + `a:select:
+        sunny {It's nice and clear outside}
+        rainy {It's going to rain}
+    }`, { a: 'bug' }), undefined);
+
+    assert.strictEqual(interp('${' + `a:select:
+        sunny {It's nice and clear outside}
+        rainy {It's going to rain}
+    }`, { a: null }), undefined);
+
+    assert.strictEqual(interp('${' + `a:select:
+        sunny {It's nice and clear outside}
+        rainy {It's going to rain}
+        null {I do not know this weather}
+    }`, { a: 'bug' }), 'I do not know this weather');
+
+    assert.strictEqual(interp('${' + `a:select:
+        sunny {It's nice and clear outside}
+        rainy {It's going to rain}
+        null {I do not know this weather}
+    }`, { a: null }), 'I do not know this weather');
+
+    assert.strictEqual(interp('${' + `a:select:
+        sunny {It's nice and clear outside}
+        rainy {It's going to rain}
+        null {}
+    }`, { a: null }), '');
+}
+
 function main() {
     testBasic();
     testNested();
@@ -326,5 +392,7 @@ function main() {
     testNullish();
     testDefault();
     testOptional();
+    testPlural();
+    testSelect();
 }
 main();
