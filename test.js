@@ -378,6 +378,30 @@ function testSelect() {
         rainy {It's going to rain}
         null {}
     }`, { a: null }), '');
+
+    assert.strictEqual(interp('${' + `happy:select:
+        true {I am happy}
+        false {I am not happy}
+        null {I do not know if I am happy}
+    }`, { happy: true }), 'I am happy');
+
+    assert.strictEqual(interp('${' + `happy:select:
+        true {I am happy}
+        false {I am not happy}
+        null {I do not know if I am happy}
+    }`, { happy: false }), 'I am not happy');
+
+    assert.strictEqual(interp('${' + `happy:select:
+        true {I am happy}
+        false {I am not happy}
+        null {I do not know if I am happy}
+    }`, { happy: undefined }), 'I do not know if I am happy');
+
+    assert.strictEqual(interp('${' + `happy:select:
+        true {I am happy}
+        false {I am not happy}
+        null {I do not know if I am happy}
+    }`, { happy: 'invalid' }), 'I do not know if I am happy');
 }
 
 function testOrdinal() {
