@@ -380,6 +380,33 @@ function testSelect() {
     }`, { a: null }), '');
 }
 
+function testOrdinal() {
+    const options = {
+        locale: 'en-US',
+        timezone: 'America/Los_Angeles',
+    };
+
+    const pattern = '${' + `a:ordinal:
+        =1 {first thing}
+        =2 {second thing}
+        one {` + '${a}' + `st thing}
+        two {` + '${a}' + `nd thing}
+        few {` + '${a}' + `rd thing}
+        other {` + '${a}' + `th thing}
+    }`;
+
+    assert.strictEqual(interp(pattern, { a: 1 }, options), 'first thing');
+    assert.strictEqual(interp(pattern, { a: 2 }, options), 'second thing');
+    assert.strictEqual(interp(pattern, { a: 3 }, options), '3rd thing');
+    assert.strictEqual(interp(pattern, { a: 4 }, options), '4th thing');
+    assert.strictEqual(interp(pattern, { a: 11 }, options), '11th thing');
+    assert.strictEqual(interp(pattern, { a: 12 }, options), '12th thing');
+    assert.strictEqual(interp(pattern, { a: 21 }, options), '21st thing');
+    assert.strictEqual(interp(pattern, { a: 22 }, options), '22nd thing');
+    assert.strictEqual(interp(pattern, { a: 23 }, options), '23rd thing');
+    assert.strictEqual(interp(pattern, { a: 24 }, options), '24th thing');
+}
+
 function main() {
     testBasic();
     testNested();
@@ -394,5 +421,6 @@ function main() {
     testOptional();
     testPlural();
     testSelect();
+    testOrdinal();
 }
 main();
