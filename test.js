@@ -18,6 +18,9 @@ function testBasic() {
     assert.strictEqual(interp('${a} ${a}a ${aa}', { a: '1', aa: '2' }), '1 1a 2');
     assert.strictEqual(interp('${a} ${a:url}', { a: '/' }), '/ %2F');
     assert.strictEqual(interp('$a$$a', { a: '1' }), '1$a');
+
+    assert.strictEqual(interp('$a\\$a', { a: '1' }), '1$a');
+    assert.strictEqual(interp('$a\\\\$a', { a: '1' }), '1\\1');
 }
 
 function testNested() {
@@ -93,7 +96,7 @@ function testFormatValueLocalized() {
         v5: 0.42,
         v6: 10,
         v7: 9.5
-    }, options), 'lol$foo$ null 69.8 2018-05-24T04:18:00.000Z 42 10 9.5');
+    }, options), 'lol$foo$  69.8 2018-05-24T04:18:00.000Z 42 10 9.5');
 
     assert.deepStrictEqual(interp('$v1$$foo$$ ${v2} ${v3:F} ${v4:iso-date} ${v5:%} ${v6} ${v7}', {
         v1: 'lol',
@@ -103,7 +106,7 @@ function testFormatValueLocalized() {
         v5: 0.42,
         v6: 10,
         v7: 9.5
-    }, options), 'lol$foo$ null 69.8 2018-05-24T04:18:00.000Z 42 10 9.5');
+    }, options), 'lol$foo$  69.8 2018-05-24T04:18:00.000Z 42 10 9.5');
 
     assert.deepStrictEqual(interp('$v1 ${v1} ${v1:enum}', {
         v1: 'some_enum'
@@ -161,7 +164,7 @@ function testFormatValueNonLocalized() {
         v5: 0.42,
         v6: 10,
         v7: 9.5
-    }, options), 'lol$foo$ null 69.8 2018-05-24T04:18:00.000Z 42 10 9.50');
+    }, options), 'lol$foo$  69.8 2018-05-24T04:18:00.000Z 42 10 9.50');
 
     assert.deepStrictEqual(interp('$v1$$foo$$ ${v2} ${v3:F} ${v4:iso-date} ${v5:%} ${v6} ${v7}', {
         v1: 'lol',
@@ -171,7 +174,7 @@ function testFormatValueNonLocalized() {
         v5: 0.42,
         v6: 10,
         v7: 9.5
-    }, options), 'lol$foo$ null 69.8 2018-05-24T04:18:00.000Z 42 10 9.50');
+    }, options), 'lol$foo$  69.8 2018-05-24T04:18:00.000Z 42 10 9.50');
 
     assert.deepStrictEqual(interp('$v1 ${v1} ${v1:enum}', {
         v1: 'some_enum'
@@ -242,6 +245,75 @@ function testPrecision() {
     assert.strictEqual(interp('${v:cm} ${v:cm.0} ${v:cm.1} ${v:cm.3}', { v: 0.123 }, options), '12.3 12 12.3 12.3');
 }
 
+function testNullish() {
+    assert.strictEqual(interp('${a}', { a: null }), undefined);
+    assert.strictEqual(interp('${a}', { a: undefined }), undefined);
+    assert.strictEqual(interp('${a}', { a: NaN }), undefined);
+    assert.strictEqual(interp('${a}', { a: '' }), undefined);
+    assert.strictEqual(interp('${a}', { a: false }), 'false');
+
+    assert.strictEqual(interp('${a}', { a: null }, {
+        failIfMissing: false
+    }), '');
+    assert.strictEqual(interp('${a}', { a: null }, {
+        failIfMissing: true
+    }), undefined);
+
+    assert.strictEqual(interp('${a} ${b}', { a: null, b: null }), undefined);
+    assert.strictEqual(interp('${a} ${b}', { a: null, b: '' }), undefined);
+    assert.strictEqual(interp('${a} ${b}', { a: null, b: '1' }), ' 1');
+    assert.strictEqual(interp('${a} ${b}', { a: '1', b: '' }), '1 ');
+
+    assert.strictEqual(interp('${a}', { a: null }, {
+        nullReplacement: '____'
+    }), undefined);
+    assert.strictEqual(interp('${a}', { a: null }, {
+        nullReplacement: '____',
+        failIfMissing: false
+    }), '____');
+
+    assert.strictEqual(interp('${a} ${b}', { a: null, b: 'b' }, {
+        nullReplacement: '____'
+    }), '____ b');
+}
+
+function testDefault() {
+    assert.strictEqual(interp('${a:-foo}', { a: null }), 'foo');
+    assert.strictEqual(interp('${a:-foo}', { a: 'value' }), 'value');
+
+    assert.strictEqual(interp('${a:.1:-foo}', { a: 1.23 }), '1.2');
+    assert.strictEqual(interp('${a:.1:-foo}', { a: null }), 'foo');
+
+    assert.strictEqual(interp('${a:-${b}}', { a: 'value', b: undefined }), 'value');
+    assert.strictEqual(interp('${a:-${b}}', { a: null, b: undefined }), undefined);
+    assert.strictEqual(interp('${a:-${b} foo}', { a: null, b: undefined }), undefined);
+    assert.strictEqual(interp('${a:-${b} foo}', { a: null, b: undefined }, {
+        failIfMissing: false
+    }), '');
+    assert.strictEqual(interp('${a:-${b}}', { a: null, b: '42' }), '42');
+    assert.strictEqual(interp('${a:-${b} foo}', { a: null, b: '42' }), '42 foo');
+    assert.strictEqual(interp('${a:-${b}\\}foo}', { a: null, b: '42' }), '42}foo');
+    assert.strictEqual(interp('${a:-${b}\\}foo}', { a: '7', b: '42' }), '7');
+}
+
+function testOptional() {
+    assert.strictEqual(interp('${?a:-foo}', { a: null }), 'a:-foo');
+    assert.strictEqual(interp('${?${a:-foo}}', { a: null }), 'foo');
+    assert.strictEqual(interp('${?${a}}', { a: null }), '');
+    assert.strictEqual(interp('1${?${a} lol}2', { a: null }), '12');
+    assert.strictEqual(interp('1${?${a} lol}2', { a: 'a' }), '1a lol2');
+    assert.strictEqual(interp('1${?${a} lol}2', { a: null }, {
+        failIfMissing: false
+    }), '12');
+    assert.strictEqual(interp('1${?lol}2', { a: 'a' }), '1lol2');
+
+    assert.strictEqual(interp('1${?${a} ${b}}2', { a: null, b: 'b' }), '12');
+    assert.strictEqual(interp('1${?${a} ${b}}2', { a: 'a', b: 'b' }), '1a b2');
+    assert.strictEqual(interp('1${?${a} ${b}}2', { a: null, b: 'b' }, {
+        failIfMissing: false
+    }), '12');
+}
+
 function main() {
     testBasic();
     testNested();
@@ -251,6 +323,8 @@ function main() {
     testFormatValueNonLocalized();
     testLocation();
     testPrecision();
-
+    testNullish();
+    testDefault();
+    testOptional();
 }
 main();
