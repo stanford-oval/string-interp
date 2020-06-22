@@ -1,3 +1,9 @@
+0.2.0
+=====
+
+* Added compatibility with node 12
+* Updated dependencies [#2, #3, #6, #7]
+
 0.1.0
 =====
 
