@@ -1,3 +1,8 @@
+0.3.1
+=====
+
+* Fixed list formatting of singletons and empty arrays [#9]
+
 0.3.0
 =====
 
