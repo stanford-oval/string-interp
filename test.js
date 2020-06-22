@@ -112,12 +112,14 @@ function testFormatValueLocalized() {
         v1: 'some_enum'
     }, options), 'some_enum some_enum some enum');
 
-    assert.deepStrictEqual(interp('$v1; ${v2:F}; ${v3}; ${v3:iso-date}; ${v4:%}', {
+    assert.deepStrictEqual(interp('$vempty; $vsingle; $v1; ${v2:F}; ${v3}; ${v3:iso-date}; ${v4:%}', {
+        vempty: [],
+        vsingle: ['single'],
         v1: ['lol', 'foo', 'cat'],
         v2: [21, 42],
         v3: [date, date2],
         v4: [0.42, 0.84],
-    }, options), 'lol, foo, and cat; 69.8 and 107.6; 5/23/2018, 9:18:00 PM and 1/7/2019, 10:30:00 AM; 2018-05-24T04:18:00.000Z and 2019-01-07T18:30:00.000Z; 42 and 84');
+    }, options), '; single; lol, foo, and cat; 69.8 and 107.6; 5/23/2018, 9:18:00 PM and 1/7/2019, 10:30:00 AM; 2018-05-24T04:18:00.000Z and 2019-01-07T18:30:00.000Z; 42 and 84');
 
     assert.deepStrictEqual(interp('${v1:conjunction}; ${v2:conjunction:F}; ${v3:disjunction}; ${v3:disjunction:iso-date}; ${v4:disjunction:%}', {
         v1: ['lol', 'foo', 'cat'],
