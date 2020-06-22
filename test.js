@@ -46,9 +46,9 @@ function testChunks() {
 
     assert.deepStrictEqual(Array.from(interp.parse('foo $v ${v2:lol}')), [
         'foo ',
-        new interp.Placeholder('v', ''),
+        new interp.Placeholder('v', undefined, ''),
         ' ',
-        new interp.Placeholder('v2', 'lol', 1)
+        new interp.Placeholder('v2', undefined, 'lol', 1)
     ]);
 }
 
@@ -118,6 +118,13 @@ function testFormatValueLocalized() {
         v3: [date, date2],
         v4: [0.42, 0.84],
     }, options), 'lol, foo, and cat; 69.8 and 107.6; 5/23/2018, 9:18:00 PM and 1/7/2019, 10:30:00 AM; 2018-05-24T04:18:00.000Z and 2019-01-07T18:30:00.000Z; 42 and 84');
+
+    assert.deepStrictEqual(interp('${v1:conjunction}; ${v2:conjunction:F}; ${v3:disjunction}; ${v3:disjunction:iso-date}; ${v4:disjunction:%}', {
+        v1: ['lol', 'foo', 'cat'],
+        v2: [21, 42],
+        v3: [date, date2],
+        v4: [0.42, 0.84, 0.85],
+    }, options), 'lol, foo, and cat; 69.8 and 107.6; 5/23/2018, 9:18:00 PM or 1/7/2019, 10:30:00 AM; 2018-05-24T04:18:00.000Z or 2019-01-07T18:30:00.000Z; 42, 84, or 85');
 }
 
 function testFormatValueNonLocalized() {
