@@ -19,7 +19,7 @@
     "prepare": "pegjs -o lib/grammar.js lib/grammar.pegjs"
   },
   "dependencies": {
-    "thingtalk-units": "^0.1.0"
+    "thingtalk-units": "^0.2.0"
   },
   "nyc": {
     "exclude": [
