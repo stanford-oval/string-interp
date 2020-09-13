@@ -1,6 +1,6 @@
 {
   "name": "string-interp",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Shell-style string interpolation",
   "main": "lib/index.js",
   "repository": "https://github.com/stanford-oval/string-interp",
