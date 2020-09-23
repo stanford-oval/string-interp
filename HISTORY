@@ -1,3 +1,10 @@
+0.3.3
+=====
+
+* The library was rewritten in TypeScript. The interface remained
+  exactly the same [#19].
+* Updated dependencies [#18].
+
 0.3.2
 =====
 

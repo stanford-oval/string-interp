@@ -1,11 +1,12 @@
 {
   "name": "string-interp",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Shell-style string interpolation",
   "repository": "https://github.com/stanford-oval/string-interp",
   "author": "Giovanni Campagna <gcampagn@cs.stanford.edu>",
   "license": "BSD-3-Clause",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@types/node": "^14.11.1",
