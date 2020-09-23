@@ -7,7 +7,7 @@
 // See LICENSE for details
 
 const assert = require('assert');
-const interp = require('./lib');
+const interp = require('./lib').default;
 
 function testBasic() {
     assert.strictEqual(interp('foo'), 'foo');

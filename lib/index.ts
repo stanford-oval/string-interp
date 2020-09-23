@@ -69,7 +69,7 @@ function replace(formatter : Formatter,
                  args : ArgsType,
                  failIfAllMissing : boolean,
                  failIfAnyMissing : boolean,
-                 nullReplacement : string) {
+                 nullReplacement : string) : string|undefined {
     let buffer = '';
     let anyFailed = false;
     let allFailed = true;
@@ -161,7 +161,7 @@ function replace(formatter : Formatter,
     return buffer;
 }
 
-function compile(string : string, options : InterpolationOptions = {}) {
+function compile(string : string, options : InterpolationOptions = {}) : ((x : ArgsType) => string|undefined) {
     const parsed : Expansion = parse(string);
     typecheck(parsed);
     const failIfMissing = options.failIfMissing === undefined ? true : options.failIfMissing;
@@ -173,7 +173,7 @@ function compile(string : string, options : InterpolationOptions = {}) {
     };
 }
 
-function interpolate(string : string, args : ArgsType, options ?: InterpolationOptions) {
+export default function interpolate(string : string, args : ArgsType, options ?: InterpolationOptions) : string|undefined {
     return compile(string, options)(args);
 }
 interpolate.parse = parse;
@@ -183,5 +183,3 @@ interpolate.Placeholder = Placeholder;
 interpolate.Optional = Optional;
 interpolate.Plural = Plural;
 interpolate.Select = Select;
-
-module.exports = interpolate;

@@ -236,4 +236,3 @@ export default class Formatter {
         return date.toLocaleString(this._locale, options);
     }
 }
-module.exports = Formatter;
