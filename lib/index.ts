@@ -176,6 +176,7 @@ function compile(string : string, options : InterpolationOptions = {}) : ((x : A
 export default function interpolate(string : string, args : ArgsType, options ?: InterpolationOptions) : string|undefined {
     return compile(string, options)(args);
 }
+interpolate.default = interpolate;
 interpolate.parse = parse;
 interpolate.compile = compile;
 interpolate.Formatter = Formatter;
@@ -183,3 +184,4 @@ interpolate.Placeholder = Placeholder;
 interpolate.Optional = Optional;
 interpolate.Plural = Plural;
 interpolate.Select = Select;
+module.exports = interpolate;
