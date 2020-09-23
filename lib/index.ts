@@ -1,28 +1,35 @@
-// -*- mode: js; indent-tabs-mode: nil; js-basic-offset: 4 -*-
+// -*- mode: ts; indent-tabs-mode: nil; js-basic-offset: 4 -*-
 //
-// Copyright 2019 The Board of Trustees of the Leland Stanford Junior University
+// Copyright 2019-2020 The Board of Trustees of the Leland Stanford Junior University
 //
 // Author: Giovanni Campagna <gcampagn@cs.stanford.edu>
 //
 // See LICENSE for details
-"use strict";
 
-const { Placeholder, Optional, Plural, Select } = require('./ast');
+import * as TTUnits from 'thingtalk-units';
 
-const TTUnits = require('thingtalk-units');
+import { Placeholder, Optional, Plural, Select, Expansion } from './ast';
 
-const Formatter = require('./formatter');
-const parser = require('./grammar');
-const { get, } = require('./utils');
+import Formatter, { EnumFormatter } from './formatter';
+import * as parser from './grammar';
+import { get, } from './utils';
 
-function parse(string) {
+function parse(string : string) : Expansion {
     return parser.parse(string);
 }
 
 const ALLOWED_OPTIONS = new Set(['%', 'iso-date', 'date', 'time', 'url', 'enum', 'lat', 'lon']);
 
-function typecheck(parsed) {
-    for (let chunk of parsed) {
+interface InterpolationOptions {
+    locale ?: string;
+    timezone ?: string;
+    formatEnum ?: EnumFormatter;
+    failIfMissing ?: boolean;
+    nullReplacement ?: string;
+}
+
+function typecheck(parsed : Expansion) {
+    for (const chunk of parsed) {
         if (typeof chunk === 'string')
             continue;
 
@@ -42,23 +49,32 @@ function typecheck(parsed) {
             typecheck(chunk.pattern);
 
         if (chunk instanceof Select || chunk instanceof Plural) {
-            for (let variant of chunk.variants.values())
+            for (const variant of chunk.variants.values())
                 typecheck(variant);
         }
     }
 }
 
-function isNullish(value) {
+function isNullish(value : unknown) : boolean {
     return value === undefined || value === null || value === '' ||
         Number.isNaN(value) || (value instanceof Date && Number.isNaN(+value));
 }
 
-function replace(formatter, parsed, args, failIfAllMissing, failIfAnyMissing, nullReplacement) {
+type ArgFunction = (x : string) => unknown;
+type ArgMap = ({ [key : string] : unknown });
+type ArgsType = ArgFunction | ArgMap;
+
+function replace(formatter : Formatter,
+                 parsed : Expansion,
+                 args : ArgsType,
+                 failIfAllMissing : boolean,
+                 failIfAnyMissing : boolean,
+                 nullReplacement : string) {
     let buffer = '';
     let anyFailed = false;
     let allFailed = true;
 
-    for (let chunk of parsed) {
+    for (const chunk of parsed) {
         if (typeof chunk === 'string') {
             buffer += chunk;
             continue;
@@ -87,7 +103,7 @@ function replace(formatter, parsed, args, failIfAllMissing, failIfAnyMissing, nu
         }
 
         if (chunk instanceof Plural) {
-            let value = typeof args === 'function' ? args(chunk.param) : get(args, chunk.param);
+            const value = typeof args === 'function' ? args(chunk.param) : get(args, chunk.param);
             let variant;
             if (typeof value !== 'number' || isNullish(value))
                 variant = chunk.variants.get('other');
@@ -145,19 +161,19 @@ function replace(formatter, parsed, args, failIfAllMissing, failIfAnyMissing, nu
     return buffer;
 }
 
-function compile(string, options = {}) {
-    const parsed = parse(string);
+function compile(string : string, options : InterpolationOptions = {}) {
+    const parsed : Expansion = parse(string);
     typecheck(parsed);
     const failIfMissing = options.failIfMissing === undefined ? true : options.failIfMissing;
     const nullReplacement = options.nullReplacement || '';
     const formatter = new Formatter(options.locale || 'C', options.timezone, options.formatEnum);
 
-    return function(args) {
+    return function(args : ArgsType) {
         return replace(formatter, parsed, args, failIfMissing, false, nullReplacement);
     };
 }
 
-function interpolate(string, args, options) {
+function interpolate(string : string, args : ArgsType, options ?: InterpolationOptions) {
     return compile(string, options)(args);
 }
 interpolate.parse = parse;

@@ -1,44 +1,53 @@
-// -*- mode: js; indent-tabs-mode: nil; js-basic-offset: 4 -*-
+// -*- mode: ts; indent-tabs-mode: nil; js-basic-offset: 4 -*-
 //
-// Copyright 2017 The Board of Trustees of the Leland Stanford Junior University
+// Copyright 2017-2020 The Board of Trustees of the Leland Stanford Junior University
 //
 // Author: Giovanni Campagna <gcampagn@cs.stanford.edu>
 //
 // See LICENSE for details
-"use strict";
 
-const Units = require('thingtalk-units');
+import * as Units from 'thingtalk-units';
 
-const { clean, } = require('./utils');
+import { clean, } from './utils';
+import { Placeholder } from './ast';
+
+export type EnumFormatter = (x : string, opt ?: string) => string;
+
+interface LocationLike {
+    lat : number;
+    lon : number;
+}
 
 /**
  * Formatting utilities.
  *
  * This class provides an abstraction over {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl|the Intl API}
  * that ensures the correct locale and timezone information are used.
- *
- * @package
  */
-class Formatter {
+export default class Formatter {
+    private _locale : string;
+    private _timezone : string|undefined;
+    private _formatEnum : EnumFormatter;
+
     /**
      * Construct a new format utils object.
      *
-     * @param {string} locale - the user's locale, as a BCP47 tag
-     * @param {string} timezone - the user's timezone, as a string in the IANA timezone database (e.g. America/Los_Angeles, Europe/Rome)
+     * @param locale - the user's locale, as a BCP47 tag
+     * @param timezone - the user's timezone, as a string in the IANA timezone database (e.g. America/Los_Angeles, Europe/Rome)
      */
-    constructor(locale, timezone, formatEnum = clean) {
-        this._locale = locale;
+    constructor(locale : string|undefined, timezone : string|undefined, formatEnum : EnumFormatter = clean) {
+        this._locale = locale || 'C';
         this._timezone = timezone;
         this._formatEnum = formatEnum;
     }
 
-    getPluralType(number, type) {
+    getPluralType(number : number, type : Intl.PluralRuleType|undefined) : string {
         if (this._locale === 'C')
             return number === 1 ? 'one' : 'other';
         return new Intl.PluralRules(this._locale, { type }).select(number);
     }
 
-    formatFallback(value, precision) {
+    formatFallback(value : unknown, precision : number) : string {
         if (typeof value === 'number')
             return this.numberToString(value, precision);
 
@@ -49,7 +58,7 @@ class Formatter {
 
             // check both own values and prototype chain, in case .display is an accessor
             if ('display' in value) {
-                const display = value.display;
+                const display = (value as ({ display : unknown })).display;
                 if (display)
                     return String(display);
             }
@@ -58,7 +67,7 @@ class Formatter {
         return this.anyToString(value);
     }
 
-    formatValue(value, chunk) {
+    formatValue(value : unknown, chunk : Placeholder) : string {
         if (Array.isArray(value))
             return this.listToString(value.map((v) => this.formatValue(v, chunk)), { type: chunk.arraystyle });
 
@@ -66,47 +75,49 @@ class Formatter {
         case '':
             return this.formatFallback(value, chunk.precision);
 
-        case '%':
-            value *= 100;
-            return this.formatFallback(value, chunk.precision);
+        case '%': {
+            let num = value as number;
+            num *= 100;
+            return this.formatFallback(num, chunk.precision);
+        }
 
         case 'iso-date':
-            return value.toISOString();
+            return (value as Date).toISOString();
 
         case 'date':
-            return this.dateToString(value);
+            return this.dateToString(value as Date);
 
         case 'time':
-            return this.timeToString(value);
+            return this.timeToString(value as Date);
 
         case 'url':
-            return encodeURIComponent(value);
+            return encodeURIComponent(value as string);
 
         case 'enum':
-            return String(this._formatEnum(value, chunk.param));
+            return String(this._formatEnum(value as string, chunk.param));
 
         // deprecated, should be `param.lat` instead
         case 'lat':
         case 'lon':
-            return this.formatFallback(value[chunk.option], chunk.precision);
+            return this.formatFallback((value as LocationLike)[chunk.option], chunk.precision);
 
         default: // unit
-            return this.measureToString(value, chunk.precision, chunk.option);
+            return this.measureToString(value as number, chunk.precision, chunk.option);
         }
     }
 
-    anyToString(value) {
+    anyToString(value : unknown) : string {
         if (this._locale === 'C' || value === null || value === undefined)
             return String(value);
         else
-            return value.toLocaleString(this._locale);
+            return (value as number).toLocaleString(this._locale);
     }
 
-    listToString(array, options = {}) {
+    listToString(array : unknown[], options : any = {}) : string {
         if (this._locale === 'C')
             return array.join(', ');
 
-        if (!Intl.ListFormat) {
+        if (!(Intl as any).ListFormat) {
             if (this._locale.startsWith('en-')) {
                 // emulate ListFormat for node 10
                 if (array.length === 0)
@@ -128,7 +139,7 @@ class Formatter {
                 return array.join(', ');
             }
         }
-        return new Intl.ListFormat(this._locale, options).format(array);
+        return new (Intl as any).ListFormat(this._locale, options).format(array);
     }
 
     /**
@@ -139,12 +150,12 @@ class Formatter {
      * @param {string} unit - the unit to display as, as a ThingTalk unit code
      * @return {string} the formatted measurement
      */
-    measureToString(value, precision, unit) {
+    measureToString(value : number, precision  = 0, unit : string) : string {
         value = Units.transformFromBaseUnit(value, unit);
         return this.numberToString(value, precision);
     }
 
-    numberToString(value, precision) {
+    numberToString(value : number, precision  = 0) : string {
         if (this._locale === 'C') {
             if (value === Math.floor(value))
                 return String(value);
@@ -167,7 +178,7 @@ class Formatter {
      * @param {Object} [options] - additional options to pass to `toLocaleString`
      * @return {string} the formatted date
      */
-    dateToString(date, options) {
+    dateToString(date : Date, options ?: Intl.DateTimeFormatOptions) : string {
         if (this._locale === 'C')
             return date.toDateString();
         if (!options) {
@@ -193,7 +204,7 @@ class Formatter {
      * @param {Object} [options] - additional options to pass to `toLocaleString`
      * @return {string} the formatted time
      */
-    timeToString(date, options) {
+    timeToString(date : Date, options ?: Intl.DateTimeFormatOptions) : string {
         if (this._locale === 'C')
             return date.toTimeString();
         if (!options) {
@@ -218,7 +229,7 @@ class Formatter {
      * @param {Object} [options] - additional options to pass to `toLocaleString`
      * @return {string} the formatted date
      */
-    dateAndTimeToString(date, options = {}) {
+    dateAndTimeToString(date : Date, options : Intl.DateTimeFormatOptions = {}) : string {
         if (this._locale === 'C')
             return date.toISOString();
         options.timeZone = this._timezone;
