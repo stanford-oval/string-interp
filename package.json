@@ -1,6 +1,6 @@
 {
   "name": "string-interp",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Shell-style string interpolation",
   "repository": "https://github.com/stanford-oval/string-interp",
   "author": "Giovanni Campagna <gcampagn@cs.stanford.edu>",
