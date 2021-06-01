@@ -3,6 +3,6 @@ node_js:
 - '12'
 - '14'
 script:
-- yarn lint
-- TZ="America/Los_Angeles" yarn test
-after_success: yarn run coverage
+- npm run lint
+- TZ="America/Los_Angeles" npm run test
+after_success: npm run coverage
